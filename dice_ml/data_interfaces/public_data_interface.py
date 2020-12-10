@@ -65,7 +65,7 @@ class PublicData:
         if 'test_split_random_state' in params:
             self.test_split_random_state = params['test_split_random_state']
         else:
-            self.test_split_random_state = 17
+            self.test_split_random_state = 0
 
         if 'continuous_features_precision' in params:
             self.continuous_features_precision = params['continuous_features_precision']
@@ -184,7 +184,7 @@ class PublicData:
 
     def split_data(self, data):
         train_df, test_df = train_test_split(
-            data, test_size=self.test_size, random_state=self.test_split_random_state)
+            data, test_size=self.test_size, shuffle = False, random_state=self.test_split_random_state)
         return train_df, test_df
 
     def get_mads(self, normalized=False):

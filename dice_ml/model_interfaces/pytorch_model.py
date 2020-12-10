@@ -23,6 +23,7 @@ class PyTorchModel(BaseModel):
         return self.model(input_tensor).float()
 
     def set_eval_mode(self):
+        self.model = self.model.cpu()
         self.model.eval()
 
     def get_gradient(self, input):

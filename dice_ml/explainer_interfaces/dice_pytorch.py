@@ -366,7 +366,7 @@ class DicePyTorch(ExplainerBase):
         # Prepares user defined query_instance for DiCE.
         query_instance = self.data_interface.prepare_query_instance(query_instance=query_instance, encode=True)
         query_instance = query_instance.iloc[0].values
-        self.x1 = torch.tensor(query_instance)
+        self.x1 = torch.tensor(query_instance).float()
 
         # find the predicted value of query_instance
         test_pred = self.predict_fn(torch.tensor(query_instance).float())[0]
