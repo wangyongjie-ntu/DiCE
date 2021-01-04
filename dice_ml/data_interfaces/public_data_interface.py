@@ -365,11 +365,11 @@ class PublicData:
         for i in range(len(self.continuous_feature_names)):
 
             if normalized:
-                source_percentile = stats.percentileofscore(train_scaled_x[:, i], source[i])
+                source_percentile = stats.percentileofscore(train_scaled_x[:, i], source[:, i])
                 target_percentile = stats.percentileofscore(train_scaled_x[:, i], target[:, i])
                 continuous_shift[i] = np.abs(source_percentile - target_percentile)
             else:
-                source_percentile = stats.percentileofscore(train_x[:, i], source[i])
+                source_percentile = stats.percentileofscore(train_x[:, i], source[:, i])
                 target_percentile = stats.percentileofscore(train_x[:, i], target[:, i])
                 continuous_shift[i] = np.abs(source_percentile - target_percentile)
        
