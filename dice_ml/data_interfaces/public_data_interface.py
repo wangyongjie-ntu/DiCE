@@ -88,12 +88,12 @@ class PublicData:
                         np.int32)
 
         if len(self.categorical_feature_names) > 0:
-            self.one_hot_encoded_data = self.one_hot_encode_data(self.data_df)
-            self.encoded_feature_names = [x for x in self.one_hot_encoded_data.columns.tolist(
+            self.one_hot_encoded_data_ = self.one_hot_encode_data(self.data_df)
+            self.encoded_feature_names = [x for x in self.one_hot_encoded_data_.columns.tolist(
             ) if x not in np.array([self.outcome_name])]
         else:
             # one-hot-encoded data is same as orignial data if there is no categorical features.
-            self.one_hot_encoded_data = self.data_df
+            self.one_hot_encoded_datas = self.data_df
             self.encoded_feature_names = self.feature_names
 
         self.train_df, self.test_df = self.split_data(self.data_df)
@@ -357,19 +357,17 @@ class PublicData:
     def compute_continuous_percentile_shift(self, source, target, normalized = False, method = 'sum'):
 
         continuous_shift = np.zeros(len(self.continuous_feature_names)).astype(np.float32)
-        train_x = self.train_df.iloc[:, 1:].values
-        test_x = self.test_df.iloc[:, 1:].values
-        train_scaled_x = self.normalize_data(self.train_df.iloc[:, 1:]).values
-        test_scaled_x = self.normalize_data(self.test_df.iloc[:, 1:]).values
+        train_x = self.one_hot_encoded_data_
+        train_scaled_x = self.normalize_data(train_x).values
 
         for i in range(len(self.continuous_feature_names)):
 
             if normalized:
-                source_percentile = stats.percentileofscore(train_scaled_x[:, i], source[:, i])
+                source_percentile = stats.percentileofscore(train_scaled_x[:, i], source[i])
                 target_percentile = stats.percentileofscore(train_scaled_x[:, i], target[:, i])
                 continuous_shift[i] = np.abs(source_percentile - target_percentile)
             else:
-                source_percentile = stats.percentileofscore(train_x[:, i], source[:, i])
+                source_percentile = stats.percentileofscore(train_x[:, i], source[i])
                 target_percentile = stats.percentileofscore(train_x[:, i], target[:, i])
                 continuous_shift[i] = np.abs(source_percentile - target_percentile)
        
