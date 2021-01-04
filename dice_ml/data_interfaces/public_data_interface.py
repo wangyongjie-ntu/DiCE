@@ -2,11 +2,11 @@
 
 import pandas as pd
 import numpy as np
+from numpy.linalg import norm
 from sklearn.model_selection import train_test_split
 import logging
 
-import tensorflow as tf
-from tensorflow import keras
+from scipy import stats
 
 
 class PublicData:
@@ -353,6 +353,37 @@ class PublicData:
             temp = self.normalize_data(temp)
 
             return temp.tail(test.shape[0]).reset_index(drop=True)
+
+    def compute_continuous_percentile_shift(self, source, target, normalized = False, method = 'sum'):
+
+        continuous_shift = np.zeros(len(self.continuous_feature_names)).astype(np.float32)
+        train_x = self.train_df.iloc[:, 1:].values
+        test_x = self.test_df.iloc[:, 1:].values
+        train_scaled_x = self.normalize_data(self.train_df.iloc[:, 1:]).values
+        test_scaled_x = self.normalize_data(self.test_df.iloc[:, 1:]).values
+
+        for i in range(len(self.continuous_feature_names)):
+
+            if normalized:
+                source_percentile = stats.percentileofscore(train_scaled_x[:, i], source[i])
+                target_percentile = stats.percentileofscore(train_scaled_x[:, i], target[:, i])
+                continuous_shift[i] = np.abs(source_percentile - target_percentile)
+            else:
+                source_percentile = stats.percentileofscore(train_x[:, i], source[i])
+                target_percentile = stats.percentileofscore(train_x[:, i], target[:, i])
+                continuous_shift[i] = np.abs(source_percentile - target_percentile)
+       
+        continuous_shift = continuous_shift / 100
+        if method == "sum":
+            score = np.mean(continuous_shift)
+        elif method == "max":
+            score = np.max(continuous_shift)
+        elif method == "1/2_norm":
+            score = norm(continuous_shift, ord = 0.5) / len(continuous_shift)
+        else:
+            score = np.mean(continuous_shift)
+
+        return score
 
     def get_dev_data(self, model_interface, desired_class, filter_threshold=0.5):
         """Constructs dev data by extracting part of the test data for which finding counterfactuals make sense."""
