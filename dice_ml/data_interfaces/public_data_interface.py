@@ -383,6 +383,14 @@ class PublicData:
 
         return score
 
+    def compute_categorical_changes(self, source, target):
+
+        #source, target = self.onehot_decode(source), self.onehot_decode(target)
+        source, target = self.from_dummies(source), self.from_dummies(target)
+        match = (source[self.categorical_feature_names].values != target[self.categorical_feature_names].values)
+        categorical_change = np.mean(match)
+        return categorical_change
+
     def get_dev_data(self, model_interface, desired_class, filter_threshold=0.5):
         """Constructs dev data by extracting part of the test data for which finding counterfactuals make sense."""
 
