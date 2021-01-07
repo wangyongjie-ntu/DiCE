@@ -354,7 +354,7 @@ class PublicData:
 
             return temp.tail(test.shape[0]).reset_index(drop=True)
 
-    def compute_continuous_percentile_shift(self, source, target, normalized = False, method = 'sum'):
+    def compute_continuous_percentile_shift(self, source, target, features_to_vary, normalized = False, method = 'sum'):
 
         continuous_shift = np.zeros(len(self.continuous_feature_names)).astype(np.float32)
         train_x = self.one_hot_encoded_data_
@@ -362,14 +362,17 @@ class PublicData:
 
         for i in range(len(self.continuous_feature_names)):
 
-            if normalized:
-                source_percentile = stats.percentileofscore(train_scaled_x[:, i], source[i])
-                target_percentile = stats.percentileofscore(train_scaled_x[:, i], target[:, i])
-                continuous_shift[i] = np.abs(source_percentile - target_percentile)
+            if self.continuous_feature_names[i] in features_to_vary:
+                if normalized:
+                    source_percentile = stats.percentileofscore(train_scaled_x[:, i], source[i])
+                    target_percentile = stats.percentileofscore(train_scaled_x[:, i], target[:, i])
+                    continuous_shift[i] = np.abs(source_percentile - target_percentile)
+                else:
+                    source_percentile = stats.percentileofscore(train_x[:, i], source[i])
+                    target_percentile = stats.percentileofscore(train_x[:, i], target[:, i])
+                    continuous_shift[i] = np.abs(source_percentile - target_percentile)
             else:
-                source_percentile = stats.percentileofscore(train_x[:, i], source[i])
-                target_percentile = stats.percentileofscore(train_x[:, i], target[:, i])
-                continuous_shift[i] = np.abs(source_percentile - target_percentile)
+                continue
        
         continuous_shift = continuous_shift / 100
         if method == "sum":
@@ -385,8 +388,6 @@ class PublicData:
 
     def compute_categorical_changes(self, source, target):
 
-        #source, target = self.onehot_decode(source), self.onehot_decode(target)
-        source, target = self.from_dummies(source), self.from_dummies(target)
         match = (source[self.categorical_feature_names].values != target[self.categorical_feature_names].values)
         categorical_change = np.mean(match)
         return categorical_change
