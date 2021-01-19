@@ -2,7 +2,6 @@
 
 import pandas as pd
 import numpy as np
-from numpy.linalg import norm
 from sklearn.model_selection import train_test_split
 import logging
 
@@ -379,8 +378,6 @@ class PublicData:
             score = np.mean(continuous_shift)
         elif method == "max":
             score = np.max(continuous_shift)
-        elif method == "1/2_norm":
-            score = norm(continuous_shift, ord = 0.5) / len(continuous_shift)
         else:
             score = np.mean(continuous_shift)
 
@@ -391,6 +388,48 @@ class PublicData:
         match = (source[self.categorical_feature_names].values != target[self.categorical_feature_names].values)
         categorical_change = np.mean(match)
         return categorical_change
+
+    def compute_sparsity(self, source, target, features_to_vary):
+        return float((source[features_to_vary] == target[features_to_vary]).values.sum()) / len(features_to_vary)
+
+    def compute_actionability_score(self, source, target, features_to_vary, continuous_rules, categorical_rules):
+
+        scores = np.zeros(len(features_to_vary))
+        for i in range(len(features_to_vary)):
+            feature = features_to_vary[i]
+            if feature in continuous_rules:
+                source_value = source.iloc[0][feature]
+                target_value = target[feature]
+                
+                if continuous_rules[feature]:
+                    if target_value > source_value:
+                        scores[i] = 1
+                    elif target_value == source_value:
+                        scores[i] = 0
+                    else:
+                        scores[i] = -1
+                else:
+                    if target_value < source_value:
+                        scores[i] = 1
+                    elif target_value == source_value:
+                        scores[i] = 0
+                    else:
+                        scores[i] = -1
+
+            elif feature in categorical_rules:
+                source_value = categorical_rules[feature][source.iloc[0][feature]]
+                target_value = categorical_rules[feature][target[feature]]
+                if target_value > source_value:
+                    scores[i] = 1
+                elif target_value == source_value:
+                    scores[i] = 0
+                else:
+                    scores[i] = -1
+            else:
+                continue
+
+        score = scores.sum() / (len(continuous_rules) + len(categorical_rules))
+        return score
 
     def get_dev_data(self, model_interface, desired_class, filter_threshold=0.5):
         """Constructs dev data by extracting part of the test data for which finding counterfactuals make sense."""
