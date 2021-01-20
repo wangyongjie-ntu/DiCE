@@ -428,7 +428,7 @@ class PublicData:
             else:
                 continue
 
-        score = scores.sum() / (len(continuous_rules) + len(categorical_rules))
+        score = scores.sum() / (scores != 0).sum()
         return score
 
     def get_dev_data(self, model_interface, desired_class, filter_threshold=0.5):
