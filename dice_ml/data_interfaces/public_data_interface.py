@@ -92,7 +92,7 @@ class PublicData:
             ) if x not in np.array([self.outcome_name])]
         else:
             # one-hot-encoded data is same as orignial data if there is no categorical features.
-            self.one_hot_encoded_datas = self.data_df
+            self.one_hot_encoded_data_ = self.data_df
             self.encoded_feature_names = self.feature_names
 
         self.train_df, self.test_df = self.split_data(self.data_df)
